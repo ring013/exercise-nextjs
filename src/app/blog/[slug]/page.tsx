@@ -5,19 +5,26 @@ import Image from "next/image";
 import { getAllSlugs, getPostBySlug } from "@/lib/markdown";
 import { formatJa, readingTimeJa } from "@/lib/utils";
 import TableOfContents from "@/components/blog/TableOfContents";
+type MaybePromise<T> = T | Promise<T>;
+type BlogPageProps = {
+  params: Promise<{ slug: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
 
 export const revalidate = 3600;
 
 // 静的生成するパス
-export async function generateStaticParams() {
+export function generateStaticParams(): { slug: string }[] {
   return getAllSlugs().map((slug) => ({ slug }));
 }
 
 // 記事ごとの SEO メタデータ
 export async function generateMetadata(
-  { params }: { params: { slug: string } }
-): Promise<Metadata> {
-  const post = await getPostBySlug(params.slug);
+  { params }: BlogPageProps
+): Promise<Metadata> { 
+  const { slug } = await params;
+  const post = await getPostBySlug(slug); 
   if (!post || !post.published) return {};
 
   const siteUrl =
@@ -46,9 +53,9 @@ export async function generateMetadata(
     },
   };
 }
-
-export default async function PostPage({ params }: { params: { slug: string } }) {
-  const post = await getPostBySlug(params.slug);
+export default async function PostPage({ params }: BlogPageProps) {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
   if (!post || !post.published) notFound();
 
   const timeLabel = readingTimeJa(post.contentHtml);

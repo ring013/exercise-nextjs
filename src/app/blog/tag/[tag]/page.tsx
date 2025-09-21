@@ -3,18 +3,21 @@ import Link from "next/link";
 import Image from "next/image"; // ← 追加
 import { getPostsByTag } from "@/lib/markdown";
 import { formatJa } from "@/lib/utils";
+type TagPageProps = {
+  params: Promise<{ tag: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
 
 export const revalidate = 3600;
 
-type Params = { params: { tag: string } };
-
-export default async function TagPage({ params }: Params) {
-  const tag = decodeURIComponent(params.tag);
-  const posts = await getPostsByTag(tag);
+export default async function TagPage({ params }: TagPageProps) {
+  const { tag } = await params;
+  const decoded = decodeURIComponent(tag);
+  const posts = await getPostsByTag(decoded);
 
   return (
     <section className="max-w-[960px] mx-auto p-4">
-      <h1 className="text-3xl font-extrabold mb-4">#{tag} の記事</h1>
+      <h1 className="text-3xl font-extrabold mb-4">#{decoded} の記事</h1>
 
       {posts.length === 0 ? (
         <p className="text-white/90">該当記事がありません。</p>

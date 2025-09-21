@@ -1,21 +1,22 @@
-// src/app/blog/page.tsx
 import Link from "next/link";
 import Image from "next/image";
 import { getAllPosts } from "@/lib/markdown";
 import { formatJa } from "@/lib/utils";
 import SearchBox from "./SearchBox";
+type MaybePromise<T> = T | Promise<T>;
+type BlogIndexPageProps = {
+  searchParams?: Promise<{ page?: string }>;
+};
 
 export const revalidate = 3600;
 
-type Props = {
-  searchParams?: { page?: string };
-};
 
-export default async function BlogPage({ searchParams }: Props) {
+export default async function BlogPage({ searchParams }: BlogIndexPageProps) {
+  const sp = await searchParams;
   const all = await getAllPosts();
 
   // --- 簡易ページネーション ---
-  const page = Math.max(1, Number(searchParams?.page ?? 1));
+  const page = Math.max(1, Number(sp?.page ?? 1));
   const perPage = 3;
   const start = (page - 1) * perPage;
   const posts = all.slice(start, start + perPage);
