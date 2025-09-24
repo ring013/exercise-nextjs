@@ -1,8 +1,8 @@
-// src/app/blog/[slug]/page.tsx
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getAllSlugs, getPostBySlug } from "@/lib/posts";
+import TableOfContents from "@/components/blog/TableOfContents";
 
 export const revalidate = 3600;
 
@@ -59,13 +59,36 @@ export default async function PostPage({ params }: { params: { slug: string } })
         {post.date} ・ {post.author} ・ {post.tags.join(" / ")}
       </p>
 
-      <article
-        id="post-article"
-        className="prose prose-invert max-w-none"
-        dangerouslySetInnerHTML={{ __html: post.contentHtml }}
-      />
+      {/* カバー画像（任意） */}
+      {post.coverImage && (
+        <div className="relative w-full h-64 mb-6">
+          {/* 外部画像対応を簡単にするため、ここは <img> を使用 */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={post.coverImage}
+            alt={post.title}
+            className="w-full h-full object-cover rounded"
+          />
+        </div>
+      )}
 
-      <div className="mt-10 flex gap-3">
+      {/* 本文＋目次の2カラム（lg以上でサイドに目次） */}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_260px] gap-8">
+        {/* 本文 */}
+        <article
+          id="post-article"
+          className="prose prose-invert max-w-none"
+          dangerouslySetInnerHTML={{ __html: post.contentHtml }}
+        />
+
+        {/* 目次 */}
+        <aside className="hidden lg:block">
+          <TableOfContents target="#post-article" />
+        </aside>
+      </div>
+
+      {/* 下部ナビ */}
+      <div className="mt-10">
         <Link
           href="/blog"
           className="rounded border border-white/15 px-4 py-2 hover:bg-white/5"
