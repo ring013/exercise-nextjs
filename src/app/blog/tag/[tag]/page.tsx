@@ -1,18 +1,19 @@
-// src/app/blog/tag/[tag]/page.tsx
 import Link from "next/link";
-import Image from "next/image"; // ← 追加
-import { getPostsByTag } from "@/lib/markdown";
-import { formatJa } from "@/lib/utils";
-type TagPageProps = {
-  params: Promise<{ tag: string }>;
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
-};
+import Image from "next/image";
+import { getAllPosts, getPostsByTag } from "@/lib/posts";
 
 export const revalidate = 3600;
 
-export default async function TagPage({ params }: TagPageProps) {
-  const { tag } = await params;
-  const decoded = decodeURIComponent(tag);
+export function generateStaticParams() {
+  // すべてのタグのユニーク集合を作って静的生成
+  const all = getAllPosts();
+  const tags = Array.from(new Set(all.flatMap((p) => p.tags)));
+  return tags.map((tag) => ({ tag }));
+}
+
+export default async function TagPage({ params }: { params: { tag: string } }) {
+  // 日本語タグ対応
+  const decoded = decodeURIComponent(params.tag);
   const posts = await getPostsByTag(decoded);
 
   return (
@@ -45,10 +46,12 @@ export default async function TagPage({ params }: TagPageProps) {
               </Link>
 
               <div className="text-sm text-white/80 mt-0.5">
-                {formatJa(p.date)} ・ {p.author}
+                {p.date} ・ {p.author}
               </div>
 
-              {p.excerpt && <p className="text-sm mt-1 text-white/90">{p.excerpt}</p>}
+              {p.excerpt && (
+                <p className="text-sm mt-1 text-white/90">{p.excerpt}</p>
+              )}
 
               <div className="mt-2 flex flex-wrap gap-2">
                 {p.tags.map((t) => (
