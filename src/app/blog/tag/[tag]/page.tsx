@@ -4,17 +4,22 @@ import { getAllPosts, getPostsByTag } from "@/lib/posts";
 
 export const revalidate = 3600;
 
-export function generateStaticParams() {
-  // すべてのタグのユニーク集合を作って静的生成
-  const all = getAllPosts();
+type TagPageProps = {
+  params: Promise<{ tag: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export function generateStaticParams(): { tag: string }[] {
+  // すべての記事からタグを集めてユニーク化 → 静的生成
+  const all = getAllPosts(); // 同期関数として実装している想定
   const tags = Array.from(new Set(all.flatMap((p) => p.tags)));
-  return tags.map((tag) => ({ tag }));
+  return tags.map((tag) => ({ tag })); // ここではエンコードしない（Next が扱う）
 }
 
-export default async function TagPage({ params }: { params: { tag: string } }) {
-  // 日本語タグ対応
-  const decoded = decodeURIComponent(params.tag);
-  const posts = await getPostsByTag(decoded);
+export default async function TagPage({ params }: TagPageProps) {
+  const { tag } = await params;                 // ← Promise を await
+  const decoded = decodeURIComponent(tag);      // 日本語タグ対応
+  const posts = getPostsByTag(decoded);
 
   return (
     <section className="max-w-[960px] mx-auto p-4">
